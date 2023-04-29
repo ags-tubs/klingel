@@ -36,6 +36,7 @@ static uint8_t off[] = {
 
 void ring() {
 	PORTA.OUTSET = PIN7_bm;
+    	TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
 
     uint8_t loc = 7*3;
     for(int i = 0; i < 3*8; i++) {
@@ -46,6 +47,7 @@ void ring() {
     display(off);
 
 	PORTA.OUTCLR = PIN7_bm;
+    	TCA0.SINGLE.CTRLA = 0;
 }
 
 static uint8_t dyn[] = {
@@ -82,6 +84,10 @@ void breathe() {
 uint8_t ring_timeout = 0;
 int main(void){
     PORTA.DIRSET = PIN4_bm | PIN7_bm;
+    PORTB.DIRSET = PIN0_bm;
+    TCA0.SINGLE.CTRLB = TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_FRQ_gc;
+    TCA0.SINGLE.CMP0L = 22;
+    TCA0.SINGLE.CMP0H = 1;
 
     while(1) {
 	    	if(ring_timeout) {
