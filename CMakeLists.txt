@@ -28,7 +28,8 @@ set(CMAKE_C_COMPILER ${AVR_CC})
 set(CMAKE_CXX_COMPILER ${AVR_CXX})
 set(CMAKE_ASM_COMPILER ${AVR_CC})
 
-set(PROGRAMMER_PORT "/dev/ttyUSB0" CACHE STRING "The Port on the computer where the programmer is connected (usually COMXX on Windows and /dev/ttyUSBX on Linux)" )
+set(UPDI_PROGRAMMER_PORT "/dev/ttyUSB0" CACHE STRING "The Port on the computer where the UPDI programmer is connected (usually COMXX on Windows and /dev/ttyUSBX on Linux)")
+set(RS485_PROGRAMMER_PORT "/dev/ttyUSB1" CACHE STRING "The Port on the computer where the RS485 programmer is connected (usually COMXX on Windows and /dev/ttyUSBX on Linux)")
 set(MCU_SPEED 3333333 CACHE STRING "The Clock speed of the target MCU")
 set(PROGRAMMING_SPEED 115200 CACHE STRING "The Baudrate when programming via UPDI")
 
@@ -69,7 +70,7 @@ add_custom_target("${EXE_NAME}" ALL DEPENDS "${EXE_NAME}.hex")
 set_target_properties("${EXE_NAME}" PROPERTIES OUTPUT_NAME "${EXE_NAME}.elf")
 
 add_custom_target(program
-	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
+	${AVRDUDE} -p t1616 -c arduino -D -b "${PROGRAMMING_SPEED}" -P "${RS485_PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
 	DEPENDS "${EXE_NAME}.hex"
 )
 
@@ -92,7 +93,7 @@ add_custom_target("${EXE_NAME}" ALL DEPENDS "${EXE_NAME}.hex")
 set_target_properties("${EXE_NAME}" PROPERTIES OUTPUT_NAME "${EXE_NAME}.elf")
 
 add_custom_target(programbl
-	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
+	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${UPDI_PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
 	DEPENDS "${EXE_NAME}.hex"
 )
 
