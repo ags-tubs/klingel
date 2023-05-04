@@ -3,6 +3,10 @@
 #include <avr/sleep.h>
 #include <util/delay.h>
 
+#define BAUD 38400
+#include <util/setbaud.h>
+
+
 typedef struct __attribute__((packed)) {
     uint8_t green;
     uint8_t red;
@@ -40,10 +44,21 @@ static color off[] = {
     { 0x00, 0x00, 0x00 },
 };
 
+static color on[] = {
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+    { 0xFF, 0xff, 0xff },
+};
+
 void ring()
 {
     PORTA.OUTSET = PIN7_bm;
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
+    // TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
 
     uint8_t loc = 7;
     for (int i = 0; i < 3 * 8; i++) {
@@ -54,7 +69,7 @@ void ring()
     display(off);
 
     PORTA.OUTCLR = PIN7_bm;
-    TCA0.SINGLE.CTRLA = 0;
+    // TCA0.SINGLE.CTRLA = 0;
 }
 
 static color dyn[] = {
@@ -89,14 +104,39 @@ void breathe()
     }
 }
 
+inline void uart_setup() {
+	USART0.CTRLA = USART_RXCIE_bm | USART_TXCIE_bm | USART_DREIE_bm;
+	USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm;
+	USART0.CTRLC = USART_CMODE_ASYNCHRONOUS_gc | USART_CHSIZE_8BIT_gc;
+	
+	USART0.BAUDH = 0;
+	USART0.BAUDL = 116;
+}
+
+ISR(USART0_TXC_vect) {
+	USART0.STATUS = USART_TXCIF_bm;
+    	PORTB.OUTCLR = PIN1_bm;
+}
+
+ISR(USART0_DRE_vect) {
+    _delay_ms(10);
+    PORTB.OUTSET = PIN1_bm;
+    USART0.TXDATAL = 0x31;
+}
+
 uint8_t ring_timeout = 0;
 int main(void)
 {
     PORTA.DIRSET = PIN4_bm | PIN7_bm;
-    PORTB.DIRSET = PIN0_bm;
+    PORTB.DIRSET = PIN0_bm | PIN1_bm | PIN2_bm;
     TCA0.SINGLE.CTRLB = TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_FRQ_gc;
     TCA0.SINGLE.CMP0L = 22;
     TCA0.SINGLE.CMP0H = 1;
+
+    uart_setup();
+    sei();
+    PORTB.OUTSET = PIN1_bm;
+    USART0.TXDATAL = 0x31;
 
     while (1) {
         if (ring_timeout) {

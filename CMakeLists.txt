@@ -73,6 +73,29 @@ add_custom_target(program
 	DEPENDS "${EXE_NAME}.hex"
 )
 
+
+
+set(EXE_NAME "bootloader")
+set(SRC_FILES bootloader.s bootloader.c)
+add_executable("${EXE_NAME}.elf" EXCLUDE_FROM_ALL ${SRC_FILES})
+set_target_properties("${EXE_NAME}.elf" PROPERTIES
+	COMPILE_FLAGS "-mmcu=attiny1616"
+	LINK_FLAGS "-mmcu=attiny1616 -Wl,--gc-sections -mrelax -Wl,-Map,'${CMAKE_BINARY_DIR}/${EXE_NAME}.map'")
+add_custom_command(
+  OUTPUT "${EXE_NAME}.hex"
+  COMMAND "${AVR_OBJCOPY}" -j .text -j .data -O ihex "${EXE_NAME}.elf" "${EXE_NAME}.hex"
+  COMMAND "${AVR_SIZE_TOOL}" "${EXE_NAME}.elf"
+  DEPENDS "${EXE_NAME}.elf"
+)
+
+add_custom_target("${EXE_NAME}" ALL DEPENDS "${EXE_NAME}.hex")
+set_target_properties("${EXE_NAME}" PROPERTIES OUTPUT_NAME "${EXE_NAME}.elf")
+
+add_custom_target(programbl
+	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
+	DEPENDS "${EXE_NAME}.hex"
+)
+
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif(NOT CMAKE_BUILD_TYPE)
