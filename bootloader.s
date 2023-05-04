@@ -12,8 +12,11 @@ setup:
 	; invert PA5 logic
 	ldi r18, 0b10000000
 	sts 0x415, r18
-	; PB0: Piezo Output (disabled for security...), PB1: RS485send, PB2 RS485 TxD, PB3 RS485 RxD
-	ldi r18, 0b00000110
+	; Just for security ensure PortB is 0 and it's not inverted, so we don't kill the Piezo
+	clr r18
+	out 0x05, r18
+	; PB0: Piezo Output, PB1: RS485send, PB2 RS485 TxD, PB3 RS485 RxD
+	ldi r18, 0b00000111
 	out 0x04, r18
 	; PC3: Touch input
 
@@ -60,6 +63,9 @@ setup:
 	
 getch:
 	cbi 0x5, 1 ; enable input
+	; boot directly on button press
+	sbic 0xA, 3
+	rjmp boot
 	; wait for data
 	lds r18, 0x804
 	bst r18, 7
