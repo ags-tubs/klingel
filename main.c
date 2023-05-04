@@ -6,7 +6,6 @@
 #define BAUD 38400
 #include <util/setbaud.h>
 
-
 typedef struct __attribute__((packed)) {
     uint8_t green;
     uint8_t red;
@@ -107,16 +106,18 @@ void breathe()
     }
 }
 
-inline void uart_setup() {
-	USART0.CTRLA = USART_DREIE_bm;
-	USART0.CTRLB = USART_TXEN_bm;
-	USART0.CTRLC = USART_CMODE_ASYNCHRONOUS_gc | USART_CHSIZE_8BIT_gc;
-	
-	USART0.BAUDH = 0;
-	USART0.BAUDL = 116;
+inline void uart_setup()
+{
+    USART0.CTRLA = USART_DREIE_bm;
+    USART0.CTRLB = USART_TXEN_bm;
+    USART0.CTRLC = USART_CMODE_ASYNCHRONOUS_gc | USART_CHSIZE_8BIT_gc;
+
+    USART0.BAUDH = 0;
+    USART0.BAUDL = 116;
 }
 
-ISR(USART0_DRE_vect) {
+ISR(USART0_DRE_vect)
+{
     USART0.TXDATAL = 0x31;
 }
 

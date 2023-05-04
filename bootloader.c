@@ -50,7 +50,6 @@
 /*                                                        */
 /**********************************************************/
 
-
 /**********************************************************/
 /*                                                        */
 /* Optional defines:                                      */
@@ -118,11 +117,9 @@
 /* *INDENT-OFF* - astyle hates optiboot                   */
 /**********************************************************/
 
-
-#include <inttypes.h>
 #include <avr/io.h>
+#include <inttypes.h>
 #include <util/delay.h>
-
 
 /*
    optiboot uses several "address" variables that are sometimes byte pointers,
@@ -132,12 +129,11 @@
    do this manually.  Expanding it a little, we can also get rid of casts.
 */
 typedef union {
-  uint8_t  *bptr;
-  uint16_t *wptr;
-  uint16_t word;
-  uint8_t bytes[2];
+    uint8_t* bptr;
+    uint16_t* wptr;
+    uint16_t word;
+    uint8_t bytes[2];
 } addr16_t;
-
 
 /*
    stk500.h contains the constant definitions for the stk500v1 comm protocol
@@ -149,11 +145,15 @@ typedef union {
    some code space on parts with smaller pagesize by using a smaller int.
 */
 #if MAPPED_PROGMEM_PAGE_SIZE > 255
-  typedef uint16_t pagelen_t;
-  #define GETLENGTH(len) len = getch()<<8; len |= getch()
+typedef uint16_t pagelen_t;
+#define GETLENGTH(len)  \
+    len = getch() << 8; \
+    len |= getch()
 #else
-  typedef uint8_t pagelen_t;
-  #define GETLENGTH(len) (void) getch() /* skip high byte */; len = getch()
+typedef uint8_t pagelen_t;
+#define GETLENGTH(len)                  \
+    (void)getch() /* skip high byte */; \
+    len = getch()
 #endif
 
 extern void putch(uint8_t ch);
@@ -162,19 +162,20 @@ extern void setup();
 extern void wait();
 extern void boot();
 
-
-void verifySpace() {
-  if (getch() != CRC_EOP) {
-    // TODO ERROR Just bootup...
-  }
-  // wait();
-  putch(STK_INSYNC);
+void verifySpace()
+{
+    if (getch() != CRC_EOP) {
+        // TODO ERROR Just bootup...
+    }
+    // wait();
+    putch(STK_INSYNC);
 }
-static void getNch(uint8_t count) {
-  do {
-    getch();
-  } while (--count);
-  verifySpace();
+static void getNch(uint8_t count)
+{
+    do {
+        getch();
+    } while (--count);
+    verifySpace();
 }
 
 /* Function Prototypes
@@ -186,122 +187,123 @@ static void getNch(uint8_t count) {
 
 // int main(void) __attribute__((OS_main)) __attribute__((section(".init9"))) __attribute__((used));
 
-int main(void) {
-  uint8_t ch;
+int main(void)
+{
+    uint8_t ch;
 
-  register addr16_t address;
-  register pagelen_t  length;
+    register addr16_t address;
+    register pagelen_t length;
 
-  setup();
-  uint8_t bootnow = 0;
-  /* Forever loop: exits by causing WDT reset */
-  while(!bootnow) {
-    /* get character from UART */
-    ch = getch();
+    setup();
+    uint8_t bootnow = 0;
+    /* Forever loop: exits by causing WDT reset */
+    while (!bootnow) {
+        /* get character from UART */
+        ch = getch();
 
-    if (ch == STK_GET_PARAMETER) {
-      unsigned char which = getch();
-      verifySpace();
-      /*
+        if (ch == STK_GET_PARAMETER) {
+            unsigned char which = getch();
+            verifySpace();
+            /*
          Send optiboot version as "SW version"
          Note that the references to memory are optimized away.
       */
-      if (which == STK_SW_MINOR) {
-        putch(1);
-      } else if (which == STK_SW_MAJOR) {
-        putch(1);
-      } else {
-        /*
+            if (which == STK_SW_MINOR) {
+                putch(1);
+            } else if (which == STK_SW_MAJOR) {
+                putch(1);
+            } else {
+                /*
            GET PARAMETER returns a generic 0x03 reply for
            other parameters - enough to keep Avrdude happy
         */
-        putch(0x03);
-      }
-    } else if (ch == STK_SET_DEVICE) {
-      // SET DEVICE is ignored
-      getNch(20);
-    } else if (ch == STK_SET_DEVICE_EXT) {
-      // SET DEVICE EXT is ignored
-      getNch(4);
-    } else if (ch == STK_LOAD_ADDRESS) {
-      // LOAD ADDRESS
-      address.bytes[0] = getch();
-      address.bytes[1] = getch();
-      verifySpace();
-      // ToDo: will there be mega-0 chips with >128k of RAM?
-      /*          UPDI chips apparently have byte-addressable FLASH ?
+                putch(0x03);
+            }
+        } else if (ch == STK_SET_DEVICE) {
+            // SET DEVICE is ignored
+            getNch(20);
+        } else if (ch == STK_SET_DEVICE_EXT) {
+            // SET DEVICE EXT is ignored
+            getNch(4);
+        } else if (ch == STK_LOAD_ADDRESS) {
+            // LOAD ADDRESS
+            address.bytes[0] = getch();
+            address.bytes[1] = getch();
+            verifySpace();
+            // ToDo: will there be mega-0 chips with >128k of RAM?
+            /*          UPDI chips apparently have byte-addressable FLASH ?
                   address.word *= 2; // Convert from word address to byte address
       */
-    } else if (ch == STK_UNIVERSAL) {
-      #ifndef RAMPZ
-      // UNIVERSAL command is ignored
-      getNch(4);
-      putch(0x00);
-      #endif
-    }
-    /* Write memory, length is big endian and is in bytes */
-    else if (ch == STK_PROG_PAGE) {
-      // PROGRAM PAGE - any kind of page!
-      uint8_t desttype;
+        } else if (ch == STK_UNIVERSAL) {
+#ifndef RAMPZ
+            // UNIVERSAL command is ignored
+            getNch(4);
+            putch(0x00);
+#endif
+        }
+        /* Write memory, length is big endian and is in bytes */
+        else if (ch == STK_PROG_PAGE) {
+            // PROGRAM PAGE - any kind of page!
+            uint8_t desttype;
 
-      GETLENGTH(length);
-      desttype = getch();
+            GETLENGTH(length);
+            desttype = getch();
 
-      if (desttype == 'F') {
-        address.word += MAPPED_PROGMEM_START;
-      } else {
-        address.word += MAPPED_EEPROM_START;
-      }
-      // TODO: user row?
+            if (desttype == 'F') {
+                address.word += MAPPED_PROGMEM_START;
+            } else {
+                address.word += MAPPED_EEPROM_START;
+            }
+            // TODO: user row?
 
-      do {
-        *(address.bptr++) = getch();
-      } while (--length);
-      verifySpace();
+            do {
+                *(address.bptr++) = getch();
+            } while (--length);
+            verifySpace();
 
-      /*
+            /*
          Actually Write the buffer to flash (and wait for it to finish.)
       */
-      _PROTECTED_WRITE_SPM(NVMCTRL.CTRLA, NVMCTRL_CMD_PAGEERASEWRITE_gc);
-      while (NVMCTRL.STATUS & (NVMCTRL_FBUSY_bm | NVMCTRL_EEBUSY_bm))
-        ; // wait for flash and EEPROM not busy, just in case.
+            _PROTECTED_WRITE_SPM(NVMCTRL.CTRLA, NVMCTRL_CMD_PAGEERASEWRITE_gc);
+            while (NVMCTRL.STATUS & (NVMCTRL_FBUSY_bm | NVMCTRL_EEBUSY_bm))
+                ; // wait for flash and EEPROM not busy, just in case.
+        }
+        /* Read memory block mode, length is big endian.  */
+        else if (ch == STK_READ_PAGE) {
+            uint8_t desttype;
+            GETLENGTH(length);
+
+            desttype = getch();
+            verifySpace();
+
+            if (desttype == 'F') {
+                address.word += MAPPED_PROGMEM_START;
+            } else {
+                address.word += MAPPED_EEPROM_START;
+            }
+            // TODO: user row?
+
+            do {
+                putch(*(address.bptr++));
+            } while (--length);
+        }
+
+        /* Get device signature bytes  */
+        else if (ch == STK_READ_SIGN) {
+            verifySpace();
+            // READ SIGN - return what Avrdude wants to hear
+            putch(SIGROW_DEVICEID0);
+            putch(SIGROW_DEVICEID1);
+            putch(SIGROW_DEVICEID2);
+        } else if (ch == STK_LEAVE_PROGMODE) {
+            verifySpace();
+            bootnow = 1;
+        } else {
+            verifySpace();
+        }
+        USART0.STATUS |= 1 << 6;
+        putch(STK_OK);
+        while (!(USART0.STATUS & (1 << 6))) { }
     }
-    /* Read memory block mode, length is big endian.  */
-    else if (ch == STK_READ_PAGE) {
-      uint8_t desttype;
-      GETLENGTH(length);
-
-      desttype = getch();
-	verifySpace();
-
-      if (desttype == 'F') {
-        address.word += MAPPED_PROGMEM_START;
-      } else {
-        address.word += MAPPED_EEPROM_START;
-      }
-      // TODO: user row?
-
-      do {
-        putch(*(address.bptr++));
-      } while (--length);
-    }
-
-    /* Get device signature bytes  */
-    else if (ch == STK_READ_SIGN) {
-	    verifySpace();
-      // READ SIGN - return what Avrdude wants to hear
-      putch(SIGROW_DEVICEID0);
-      putch(SIGROW_DEVICEID1);
-      putch(SIGROW_DEVICEID2);
-    } else if(ch == STK_LEAVE_PROGMODE) {   
-	    verifySpace();
-	    bootnow = 1;
-    } else {
-	    verifySpace();
-    }
-    USART0.STATUS |= 1 << 6;
-    putch(STK_OK);
-    while(!(USART0.STATUS & (1 << 6))){}
-  }
-  boot();
+    boot();
 }
