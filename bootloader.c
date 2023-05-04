@@ -248,7 +248,7 @@ int main(void) {
       desttype = getch();
 
       if (desttype == 'F') {
-        address.word += MAPPED_PROGMEM_START + 0x400;
+        address.word += MAPPED_PROGMEM_START;
       } else {
         address.word += MAPPED_EEPROM_START;
       }
@@ -275,7 +275,7 @@ int main(void) {
 	verifySpace();
 
       if (desttype == 'F') {
-        address.word += MAPPED_PROGMEM_START + 0x400;
+        address.word += MAPPED_PROGMEM_START;
       } else {
         address.word += MAPPED_EEPROM_START;
       }

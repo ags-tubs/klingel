@@ -57,7 +57,7 @@ set(SRC_FILES main.c disp.s)
 add_executable("${EXE_NAME}.elf" EXCLUDE_FROM_ALL ${SRC_FILES})
 set_target_properties("${EXE_NAME}.elf" PROPERTIES
 	COMPILE_FLAGS "-mmcu=attiny1616"
-	LINK_FLAGS "-mmcu=attiny1616 -Wl,--gc-sections -mrelax -Wl,-Map,'${CMAKE_BINARY_DIR}/${EXE_NAME}.map'")
+	LINK_FLAGS "-mmcu=attiny1616 -Wl,--gc-sections -Wl,--section-start=.text=0x400 -mrelax -Wl,-Map,'${CMAKE_BINARY_DIR}/${EXE_NAME}.map'")
 add_custom_command(
   OUTPUT "${EXE_NAME}.hex"
   COMMAND "${AVR_OBJCOPY}" -j .text -j .data -O ihex "${EXE_NAME}.elf" "${EXE_NAME}.hex"
