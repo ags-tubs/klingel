@@ -93,7 +93,7 @@ add_custom_target("${EXE_NAME}" ALL DEPENDS "${EXE_NAME}.hex")
 set_target_properties("${EXE_NAME}" PROPERTIES OUTPUT_NAME "${EXE_NAME}.elf")
 
 add_custom_target(programbl
-	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${UPDI_PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex"
+	${AVRDUDE} -p t1616 -c serialupdi -b "${PROGRAMMING_SPEED}" -P "${UPDI_PROGRAMMER_PORT}" -U "flash:w:${EXE_NAME}.hex" -U bootend:w:0x04:m
 	DEPENDS "${EXE_NAME}.hex"
 )
 
