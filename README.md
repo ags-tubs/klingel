@@ -1,11 +1,15 @@
 # ags Klingel
 
+![PCB-front-view](electrical_CAD/AGS_Klingel_V2-1_front.png)
+
 Fancy Klingel designed by Max Nowka.
 Features:
 - 24V VCC
 - Piezo
 - WS2813 RGB LEDs
 - RS485 Support (bsp. für Modbus)
+- "Touch"
+- mit dem Gehäuse mehr oder weniger vandalismussicher
 
 ## How to CMake
 
